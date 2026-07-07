@@ -358,6 +358,70 @@ p {
   }
 }
 
+/* Print Styles */
+@media print {
+  header {
+    display: none;
+  }
+  
+  #homeView .topbar,
+  #projectView .topbar,
+  #overviewView .topbar {
+    display: none;
+  }
+  
+  .container {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #overviewView {
+    display: block !important;
+  }
+  
+  #overviewContainer {
+    max-width: 100%;
+  }
+  
+  .print-title {
+    display: block !important;
+  }
+  
+  .overview-card {
+    page-break-inside: avoid;
+    padding: 20px 0;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .overview-card:last-child {
+    border-bottom: none;
+  }
+  
+  .overview-card-question {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    color: #000;
+    font-weight: bold;
+  }
+  
+  .overview-card-answer {
+    font-size: 0.9em;
+    color: #333;
+    line-height: 1.6;
+  }
+  
+  body {
+    background: white !important;
+    color: black;
+  }
+  
+  .modal,
+  .fullscreen-modal {
+    display: none !important;
+  }
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
@@ -492,6 +556,55 @@ p {
   font-size: 0.9em;
   white-space: nowrap;
   z-index: 2000;
+}
+
+/* Overview Cards */
+.overview-card {
+  background: transparent;
+  border-radius: 0;
+  padding: 24px 0;
+  border: none;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: none;
+  transition: none;
+  cursor: default;
+}
+
+.overview-card:last-child {
+  border-bottom: none;
+}
+
+.overview-card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+.overview-card-project {
+  color: var(--accent);
+  font-size: 0.8em;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.overview-card-question {
+  color: var(--text);
+  font-size: 1.2em;
+  font-weight: 700;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.overview-card-answer {
+  color: var(--text-muted);
+  font-size: 0.95em;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: none;
+  overflow-y: visible;
 }</style>
 </head>
 <body>
@@ -499,8 +612,8 @@ p {
 <header>📚 Flashcard Manager + Revision Tracker</header>
 
 <div class="container" id="homeView">
-  <h2>📚 Projects</h2>
-  <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+  <h2 style="margin: 0;">📚 Projects</h2>
+  <div style="display: flex; gap: 10px; margin-bottom: 20px; margin-top: 20px;">
     <input id="newProjectName" placeholder="Enter project name" style="flex: 1;">
     <button id="addProjectBtn" style="flex: 0 0 auto;">✨ Create</button>
   </div>
@@ -514,7 +627,10 @@ p {
   <div class="topbar">
     <button id="backBtn" style="flex: 0 0 auto;">⬅ Back</button>
     <h2 id="projectTitle"></h2>
-    <button id="addFlashBtn" style="flex: 0 0 auto; width: auto;">➕ Add Card</button>
+    <div style="display: flex; gap: 10px; flex: 0 0 auto;">
+      <button id="overviewBtn" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">📋 Overview</button>
+      <button id="addFlashBtn" style="width: auto;">➕ Add Card</button>
+    </div>
   </div>
 
   <div class="project-main">
@@ -532,6 +648,16 @@ p {
       <div id="todayRevisionContainer"></div>
     </div>
   </div>
+</div>
+
+<!-- Overview View -->
+<div class="container" id="overviewView" style="display:none;">
+  <div class="topbar">
+    <button id="backFromOverviewBtn" style="flex: 0 0 auto;">⬅ Back to Project</button>
+    <h2 id="overviewTitle"></h2>
+    <div style="flex: 0 0 auto; width: auto;"></div>
+  </div>
+  <div id="overviewContainer" style="max-width: 1000px; margin: 0 auto;"></div>
 </div>
 
 <!-- Flashcard Modal -->
@@ -567,6 +693,7 @@ let editingCardIndex = null;
 // DOM elements
 const homeView = document.getElementById('homeView');
 const projectView = document.getElementById('projectView');
+const overviewView = document.getElementById('overviewView');
 const projectsList = document.getElementById('projectsList');
 const projectTitle = document.getElementById('projectTitle');
 const projectNote = document.getElementById('projectNote');
@@ -635,8 +762,67 @@ function backHome(){
   currentProject=null;
   homeView.style.display='block';
   projectView.style.display='none';
+  overviewView.style.display='none';
   renderProjects();
   renderTodayRevisionHome();
+}
+
+function openOverview(){
+  projectView.style.display='none';
+  overviewView.style.display='block';
+  renderOverview();
+}
+
+function backToProject(){
+  overviewView.style.display='none';
+  projectView.style.display='block';
+}
+
+function renderOverview(){
+  const overviewContainer = document.getElementById('overviewContainer');
+  const overviewTitle = document.getElementById('overviewTitle');
+  overviewContainer.innerHTML = '';
+  overviewTitle.textContent = `📋 ${currentProject} - Flashcards Overview`;
+  
+  // Add print title to container
+  const printTitle = document.createElement('div');
+  printTitle.style.cssText = 'display: none; text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #000;';
+  printTitle.className = 'print-title';
+  const titleText = document.createElement('h1');
+  titleText.style.cssText = 'margin: 0 0 5px 0; font-size: 1.8em;';
+  titleText.textContent = currentProject;
+  const subtitle = document.createElement('p');
+  subtitle.style.cssText = 'margin: 0; color: #666; font-size: 0.9em;';
+  subtitle.textContent = `Study Guide - ${new Date().toLocaleDateString()}`;
+  printTitle.appendChild(titleText);
+  printTitle.appendChild(subtitle);
+  overviewContainer.appendChild(printTitle);
+  
+  const cards = projects[currentProject].flashcards;
+  let cardCount = 0;
+  
+  cards.forEach(card => {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'overview-card';
+    
+    const questionDiv = document.createElement('div');
+    questionDiv.className = 'overview-card-question';
+    questionDiv.textContent = card.question;
+    
+    const answerDiv = document.createElement('div');
+    answerDiv.className = 'overview-card-answer';
+    answerDiv.textContent = card.answer;
+    
+    cardDiv.appendChild(questionDiv);
+    cardDiv.appendChild(answerDiv);
+    
+    overviewContainer.appendChild(cardDiv);
+    cardCount++;
+  });
+  
+  if(cardCount === 0) {
+    overviewContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px 0;">No flashcards yet in this project.</p>';
+  }
 }
 
 // ---- Flashcard functions ----
@@ -812,6 +998,8 @@ projectNote.addEventListener('input',()=>{ projects[currentProject].note=project
 // ---- Event Listeners ----
 document.getElementById('addProjectBtn').addEventListener('click',()=>{ addProject(document.getElementById('newProjectName').value.trim()); document.getElementById('newProjectName').value=''; });
 document.getElementById('backBtn').addEventListener('click',backHome);
+document.getElementById('backFromOverviewBtn').addEventListener('click',backToProject);
+document.getElementById('overviewBtn').addEventListener('click',openOverview);
 document.getElementById('addFlashBtn').addEventListener('click',openModal);
 document.getElementById('saveFlashBtn').addEventListener('click',saveFlashcard);
 document.getElementById('cancelFlashBtn').addEventListener('click',closeModal);
