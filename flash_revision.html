@@ -280,13 +280,18 @@ h4 {
 
 .modal-content {
   background: linear-gradient(135deg, var(--card) 0%, var(--card-light) 100%);
-  padding: 28px;
+  padding: 40px;
   border-radius: 16px;
-  width: 90%;
-  max-width: 450px;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   border: 1px solid rgba(148, 163, 184, 0.1);
   animation: slideUp 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 @keyframes slideUp {
@@ -296,17 +301,36 @@ h4 {
 
 .modal-content h3 {
   margin-top: 0;
+  margin-bottom: 20px;
   color: var(--text);
-  font-size: 1.4em;
+  font-size: 1.8em;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
-.modal-content input,
+.modal-content input {
+  padding: 16px;
+  font-size: 1.1em;
+  margin-bottom: 20px;
+  min-height: 50px;
+  flex-shrink: 0;
+}
+
 .modal-content textarea {
-  margin-bottom: 12px;
+  padding: 16px;
+  font-size: 1.1em;
+  margin-bottom: 20px;
+  flex: 1;
+  resize: none;
+  min-height: 0;
 }
 
-.modal-content button { width: 100%; margin-top: 12px; }
+.modal-content button { 
+  padding: 16px;
+  font-size: 1.1em;
+  flex-shrink: 0;
+  width: auto;
+}
 
 p {
   color: var(--text-muted);
@@ -513,7 +537,7 @@ p {
 <!-- Flashcard Modal -->
 <div class="modal" id="flashModal">
   <div class="modal-content">
-    <h3>✨ Create Flashcard</h3>
+    <h3 id="flashModalTitle">✨ Create Flashcard</h3>
     <input id="question" placeholder="Question" style="margin-bottom: 12px;">
     <textarea id="answer" placeholder="Answer" style="margin-bottom: 12px; min-height: 80px;"></textarea>
     <div style="display: flex; gap: 10px;">
@@ -538,6 +562,7 @@ p {
 <script>
 let projects = JSON.parse(localStorage.getItem('projects')) || {};
 let currentProject = null;
+let editingCardIndex = null;
 
 // DOM elements
 const homeView = document.getElementById('homeView');
@@ -615,8 +640,27 @@ function backHome(){
 }
 
 // ---- Flashcard functions ----
-function openModal(){ flashModal.style.display='flex'; }
-function closeModal(){ flashModal.style.display='none'; questionInput.value=''; answerInput.value=''; }
+function openModal(){ 
+  editingCardIndex = null;
+  document.getElementById('flashModalTitle').textContent = '✨ Create Flashcard';
+  flashModal.style.display='flex'; 
+}
+
+function openEditModal(index) {
+  editingCardIndex = index;
+  const card = projects[currentProject].flashcards[index];
+  questionInput.value = card.question;
+  answerInput.value = card.answer;
+  document.getElementById('flashModalTitle').textContent = '✏️ Edit Flashcard';
+  flashModal.style.display='flex';
+}
+
+function closeModal(){ 
+  flashModal.style.display='none'; 
+  questionInput.value=''; 
+  answerInput.value=''; 
+  editingCardIndex = null;
+}
 
 // ---- Fullscreen Flashcard Modal ----
 const fullscreenModal = document.getElementById('fullscreenModal');
@@ -656,13 +700,22 @@ function saveFlashcard(){
   if(!currentProject) return alert("Open a project first!");
   const q = questionInput.value.trim(); const a = answerInput.value.trim();
   if(!q || !a) return alert("Fill both fields!");
-  const date = new Date().toISOString().split('T')[0];
-  const revisionDays = [1,3,7,14,30];
-  const revisions = revisionDays.map(d=>{
-    const revDate=new Date(); revDate.setDate(revDate.getDate()+d);
-    return revDate.toISOString().split('T')[0];
-  });
-  projects[currentProject].flashcards.push({ question:q, answer:a, date, revisions });
+  
+  if(editingCardIndex !== null) {
+    // Update existing card
+    projects[currentProject].flashcards[editingCardIndex].question = q;
+    projects[currentProject].flashcards[editingCardIndex].answer = a;
+  } else {
+    // Create new card
+    const date = new Date().toISOString().split('T')[0];
+    const revisionDays = [1,3,7,14,30];
+    const revisions = revisionDays.map(d=>{
+      const revDate=new Date(); revDate.setDate(revDate.getDate()+d);
+      return revDate.toISOString().split('T')[0];
+    });
+    projects[currentProject].flashcards.push({ question:q, answer:a, date, revisions });
+  }
+  
   save(); closeModal(); renderFlashcards(); renderTodayRevision(); renderTodayRevisionHome();
 }
 
@@ -676,15 +729,22 @@ function renderFlashcards(){
     const front=document.createElement('div'); front.className='flashcard-front'; front.textContent=card.question;
     const back=document.createElement('div'); back.className='flashcard-back';
     back.innerHTML=`<div>${card.answer}</div><div style="margin-top:5px;font-size:0.8em">Next revisions: ${card.revisions.join(', ')}</div>`;
+    
+    const editBtn=document.createElement('button'); editBtn.textContent='✏️';
+    editBtn.className='flashcard-delete';
+    editBtn.style.right = '40px';
+    editBtn.style.background = 'rgba(59, 130, 246, 0.9)';
+    editBtn.addEventListener('click',(e)=>{ e.stopPropagation(); openEditModal(index); });
+    
     const delBtn=document.createElement('button'); delBtn.textContent='🗑';
     delBtn.className='flashcard-delete';
     delBtn.addEventListener('click',(e)=>{ e.stopPropagation(); deleteFlashcard(index); });
     
     // Add click to open fullscreen
     inner.style.cursor = 'pointer';
-    inner.addEventListener('click',(e)=>{ if(e.target !== delBtn) openFullscreenCard(card.question, card.answer); });
+    inner.addEventListener('click',(e)=>{ if(e.target !== delBtn && e.target !== editBtn) openFullscreenCard(card.question, card.answer); });
     
-    div.appendChild(delBtn); inner.appendChild(front); inner.appendChild(back); div.appendChild(inner);
+    div.appendChild(editBtn); div.appendChild(delBtn); inner.appendChild(front); inner.appendChild(back); div.appendChild(inner);
     flashcardsContainer.appendChild(div);
   });
 }
