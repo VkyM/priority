@@ -616,6 +616,9 @@ p {
   <div style="display: flex; gap: 10px; margin-bottom: 20px; margin-top: 20px;">
     <input id="newProjectName" placeholder="Enter project name" style="flex: 1;">
     <button id="addProjectBtn" style="flex: 0 0 auto;">✨ Create</button>
+    <button id="exportBtn" style="flex: 0 0 auto; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">💾 Export</button>
+    <button id="importBtn" style="flex: 0 0 auto; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">📥 Import</button>
+    <input id="importFile" type="file" accept=".json,application/json" style="display: none;">
   </div>
   <div id="projectsList"></div>
 
@@ -766,6 +769,65 @@ function backHome(){
   renderProjects();
   renderTodayRevisionHome();
 }
+
+function exportData() {
+  const dataStr = JSON.stringify(projects, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `flashcards_backup_${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function importData() {
+  document.getElementById('importFile').click();
+}
+
+document.getElementById('importFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const importedData = JSON.parse(event.target.result);
+      
+      // Validate the data structure
+      if (typeof importedData !== 'object' || importedData === null) {
+        throw new Error('Invalid JSON format');
+      }
+      
+      // Check if user wants to merge or replace
+      if (Object.keys(projects).length > 0) {
+        if (confirm('Do you want to MERGE with existing data (OK) or REPLACE all data (Cancel)?')) {
+          // Merge
+          projects = { ...projects, ...importedData };
+        } else {
+          // Replace
+          projects = importedData;
+        }
+      } else {
+        projects = importedData;
+      }
+      
+      save();
+      renderProjects();
+      renderTodayRevisionHome();
+      alert('✅ Data imported successfully!');
+    } catch (error) {
+      alert('❌ Error importing JSON: ' + error.message);
+    }
+    
+    // Reset file input
+    e.target.value = '';
+  };
+  
+  reader.readAsText(file);
+});
 
 function openOverview(){
   projectView.style.display='none';
@@ -997,6 +1059,8 @@ projectNote.addEventListener('input',()=>{ projects[currentProject].note=project
 
 // ---- Event Listeners ----
 document.getElementById('addProjectBtn').addEventListener('click',()=>{ addProject(document.getElementById('newProjectName').value.trim()); document.getElementById('newProjectName').value=''; });
+document.getElementById('exportBtn').addEventListener('click', exportData);
+document.getElementById('importBtn').addEventListener('click', importData);
 document.getElementById('backBtn').addEventListener('click',backHome);
 document.getElementById('backFromOverviewBtn').addEventListener('click',backToProject);
 document.getElementById('overviewBtn').addEventListener('click',openOverview);
