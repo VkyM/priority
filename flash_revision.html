@@ -36,6 +36,7 @@ header {
   font-weight: 700;
   box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
   letter-spacing: -0.5px;
+  display: none;
 }
 
 .container {
@@ -338,23 +339,222 @@ p {
 }
 
 @media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+    margin: 10px auto;
+    padding: 10px;
+  }
+
   .project-main {
-    flex-direction: column;
-    gap: 20px;
-  }
-  .right-section {
-    max-height: 400px;
-  }
-  .topbar {
     flex-direction: column;
     gap: 15px;
   }
+
+  .right-section {
+    max-height: 300px;
+  }
+
+  .topbar {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
   .topbar h2 {
     text-align: left;
+    font-size: 1.3em;
+    margin: 0;
   }
+
+  .topbar div {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .topbar button {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 10px;
+    font-size: 0.9em;
+  }
+
   .flashcard {
-    width: 180px;
-    height: 120px;
+    width: 100%;
+    max-width: 160px;
+    height: 110px;
+    margin: 8px;
+  }
+
+  h2 {
+    font-size: 1.2em;
+    margin: 20px 0 10px 0;
+  }
+
+  h4 {
+    font-size: 0.95em;
+    margin: 10px 0 8px 0;
+  }
+
+  .note-box {
+    padding: 12px;
+    margin-top: 10px;
+  }
+
+  .note-box textarea {
+    min-height: 60px;
+    font-size: 1em;
+  }
+
+  input, textarea {
+    padding: 10px;
+    font-size: 1em;
+  }
+
+  button {
+    padding: 10px 12px;
+    font-size: 0.95em;
+  }
+
+  .project-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .project-buttons {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .project-buttons button {
+    flex: 1;
+    font-size: 0.85em;
+  }
+
+  .modal-content {
+    width: 98%;
+    max-height: 95vh;
+    padding: 20px;
+  }
+
+  .modal-content h3 {
+    font-size: 1.3em;
+    margin-bottom: 15px;
+  }
+
+  .modal-content input {
+    min-height: 40px;
+    padding: 12px;
+    font-size: 1em;
+  }
+
+  .modal-content textarea {
+    min-height: 200px;
+  }
+
+  .fullscreen-card-container {
+    padding: 40px 20px 20px 20px;
+  }
+
+  .fullscreen-card-front,
+  .fullscreen-card-back {
+    padding: 20px;
+    font-size: 1.1em;
+  }
+
+  .fullscreen-close-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5em;
+  }
+
+  .fullscreen-hint {
+    font-size: 0.8em;
+    bottom: 10px;
+  }
+
+  #overviewContainer {
+    padding: 10px 0;
+  }
+
+  .overview-card {
+    padding: 15px 0;
+  }
+
+  .overview-card-question {
+    font-size: 1em;
+  }
+
+  .overview-card-answer {
+    font-size: 0.9em;
+  }
+
+  .flashcard-delete {
+    width: 24px;
+    height: 24px;
+    font-size: 0.8em;
+  }
+
+  .left-section {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 8px;
+  }
+
+  .topbar {
+    gap: 8px;
+  }
+
+  .topbar button,
+  .topbar div button {
+    padding: 8px;
+    font-size: 0.85em;
+    min-width: 0;
+  }
+
+  h2 {
+    font-size: 1em;
+    margin: 15px 0 8px 0;
+  }
+
+  input, textarea {
+    padding: 8px;
+    font-size: 0.95em;
+  }
+
+  button {
+    padding: 8px 10px;
+    font-size: 0.85em;
+  }
+
+  .flashcard {
+    width: 100%;
+    max-width: 140px;
+    height: 100px;
+    margin: 6px;
+  }
+
+  .modal-content {
+    padding: 15px;
+  }
+
+  .modal-content textarea {
+    min-height: 150px;
+  }
+
+  .overview-card-question {
+    font-size: 0.95em;
+  }
+
+  #overviewContainer {
+    max-width: 100%;
   }
 }
 
